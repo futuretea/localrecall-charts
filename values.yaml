@@ -103,6 +103,8 @@ postgresql:
     ## @param postgresql.external.existingSecret Name of existing secret containing PostgreSQL credentials
     ## If set, username and password will be ignored
     existingSecret: "localrecall-postgresql-account-postgres"
+    ## @param postgresql.external.existingSecretUsernameKey Key in existing secret containing username
+    existingSecretUsernameKey: "username"
     ## @param postgresql.external.existingSecretPasswordKey Key in existing secret containing password
     existingSecretPasswordKey: "password"
 
@@ -141,9 +143,9 @@ service:
 ## Ingress configuration
 ingress:
   ## @param ingress.enabled Enable ingress record generation
-  enabled: true
+  enabled: false
   ## @param ingress.className IngressClass that will be used
-  className: ""
+  className: "nginx"
   ## @param ingress.annotations Additional annotations for the Ingress resource
   annotations: {}
     # kubernetes.io/ingress.class: nginx

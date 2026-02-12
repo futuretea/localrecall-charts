@@ -55,11 +55,26 @@ spec:
         - name: COLLECTION_DB_PATH
           value: "/db"
         {{- if eq .Values.config.vectorEngine "postgres" }}
+        {{- if .Values.postgresql.external.existingSecret }}
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.postgresql.external.existingSecret }}
+              key: {{ .Values.postgresql.external.existingSecretUsernameKey }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.postgresql.external.existingSecret }}
+              key: {{ .Values.postgresql.external.existingSecretPasswordKey }}
+        - name: DATABASE_URL
+          value: {{ printf "postgresql://$(DB_USERNAME):$(DB_PASSWORD)@%s:%d/%s?sslmode=%s" .Values.postgresql.external.host (.Values.postgresql.external.port | int) .Values.postgresql.external.database .Values.postgresql.external.sslMode }}
+        {{- else }}
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: {{ include "localrecall.fullname" . }}
               key: database-url
+        {{- end }}
         - name: HYBRID_SEARCH_BM25_WEIGHT
           value: {{ .Values.config.hybridSearch.bm25Weight | quote }}
         - name: HYBRID_SEARCH_VECTOR_WEIGHT

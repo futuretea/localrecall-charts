@@ -1,0 +1,265 @@
+## Default values for LocalRecall
+## This is a YAML-formatted file.
+## Declare variables to be passed into your templates.
+
+## @section Global parameters
+global:
+  ## @param global.imageRegistry Global Docker image registry
+  imageRegistry: ""
+
+## @section LocalRecall parameters
+
+## LocalRecall image configuration
+image:
+  ## @param image.registry LocalRecall image registry
+  registry: quay.io
+  ## @param image.repository LocalRecall image repository
+  repository: mudler/localrecall
+  ## @param image.tag LocalRecall image tag (immutable tags are recommended)
+  tag: "v0.5.4"
+  ## @param image.pullPolicy LocalRecall image pull policy
+  pullPolicy: IfNotPresent
+  ## @param image.pullSecrets Specify docker-registry secret names as an array
+  pullSecrets: []
+
+## @param nameOverride String to partially override localrecall.fullname
+nameOverride: ""
+
+## @param fullnameOverride String to fully override localrecall.fullname
+fullnameOverride: ""
+
+## @param replicaCount Number of LocalRecall replicas to deploy
+replicaCount: 1
+
+## ServiceAccount configuration
+serviceAccount:
+  ## @param serviceAccount.create Enable creation of ServiceAccount for LocalRecall pod
+  create: true
+  ## @param serviceAccount.name The name of the ServiceAccount to use.
+  name: ""
+  ## @param serviceAccount.annotations Annotations for service account
+  annotations: {}
+
+## @section LocalRecall Configuration
+
+## LocalRecall application configuration
+config:
+  ## @param config.vectorEngine Vector database engine to use (chromem or postgres)
+  vectorEngine: "postgres"
+  
+  ## @param config.embeddingModel Embedding model name
+  embeddingModel: "qwen3-embedding-8b"
+  
+  ## @param config.maxChunkingSize Maximum size (in characters) for document chunks
+  maxChunkingSize: 400
+  
+  ## @param config.chunkOverlap Overlap in characters between consecutive chunks
+  chunkOverlap: 0
+  
+  ## @param config.listeningAddress Address the server listens on
+  listeningAddress: ":8080"
+
+  ## Hybrid search configuration (PostgreSQL only)
+  hybridSearch:
+    ## @param config.hybridSearch.bm25Weight Weight for BM25 keyword search
+    bm25Weight: "0.5"
+    ## @param config.hybridSearch.vectorWeight Weight for vector similarity search
+    vectorWeight: "0.5"
+
+  ## OpenAI-compatible API configuration for embeddings
+  openai:
+    ## @param config.openai.apiKey API key for embedding service
+    apiKey: ""
+    ## @param config.openai.baseUrl Base URL for embedding service
+    baseUrl: "http://local-ai/v1"
+
+  ## API Keys for securing access (comma-separated)
+  ## @param config.apiKeys Comma-separated list of API keys for authentication
+  apiKeys: ""
+
+  ## @param config.gitPrivateKey Base64-encoded SSH private key for private Git repositories
+  gitPrivateKey: ""
+
+## PostgreSQL configuration
+## This chart requires an external PostgreSQL database
+postgresql:
+  ## @param postgresql.enabled Enable PostgreSQL subchart (set to false as we use external DB)
+  enabled: false
+  
+  ## External PostgreSQL configuration
+  external:
+    ## @param postgresql.external.host External PostgreSQL host
+    host: "localrecall-postgresql-postgresql"
+    ## @param postgresql.external.port External PostgreSQL port
+    port: 5432
+    ## @param postgresql.external.database External PostgreSQL database name
+    database: "localrecall"
+    ## @param postgresql.external.username External PostgreSQL username
+    username: ""
+    ## @param postgresql.external.password External PostgreSQL password
+    password: ""
+    ## @param postgresql.external.sslMode SSL mode for PostgreSQL connection
+    sslMode: "disable"
+    ## @param postgresql.external.existingSecret Name of existing secret containing PostgreSQL credentials
+    ## If set, username and password will be ignored
+    existingSecret: "localrecall-postgresql-account-postgres"
+    ## @param postgresql.external.existingSecretPasswordKey Key in existing secret containing password
+    existingSecretPasswordKey: "password"
+
+## Persistence configuration
+persistence:
+  ## @param persistence.enabled Enable persistence for file assets and Chromem database
+  enabled: true
+  
+  ## @param persistence.storageClass PVC Storage Class
+  storageClass: "longhorn"
+  
+  ## @param persistence.accessModes PVC Access Modes
+  accessModes:
+    - ReadWriteMany
+  
+  ## @param persistence.size PVC Storage Request
+  size: 10Gi
+  
+  ## @param persistence.annotations Annotations for the PVC
+  annotations: {}
+  
+  ## @param persistence.existingClaim Name of an existing PVC to use
+  existingClaim: ""
+
+## Service configuration
+service:
+  ## @param service.type Kubernetes Service type
+  type: ClusterIP
+  ## @param service.port Service HTTP port
+  port: 8080
+  ## @param service.nodePort NodePort for HTTP (used if service.type is NodePort)
+  nodePort: ""
+  ## @param service.annotations Annotations for service
+  annotations: {}
+
+## Ingress configuration
+ingress:
+  ## @param ingress.enabled Enable ingress record generation
+  enabled: true
+  ## @param ingress.className IngressClass that will be used
+  className: ""
+  ## @param ingress.annotations Additional annotations for the Ingress resource
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  ## @param ingress.hosts Ingress hosts configuration
+  hosts:
+    - host: localrecall.local
+      paths:
+        - path: /
+          pathType: Prefix
+  ## @param ingress.tls Ingress TLS configuration
+  tls: []
+  #  - secretName: localrecall-tls
+  #    hosts:
+  #      - localrecall.local
+
+## Resource limits and requests
+resources:
+  ## @param resources.limits Resource limits
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  ## @param resources.requests Resource requests
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+## Liveness probe configuration
+livenessProbe:
+  ## @param livenessProbe.enabled Enable livenessProbe
+  enabled: true
+  ## @param livenessProbe.httpGet.path Path for liveness probe
+  httpGet:
+    path: /
+    port: http
+  ## @param livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  initialDelaySeconds: 30
+  ## @param livenessProbe.periodSeconds Period seconds for livenessProbe
+  periodSeconds: 10
+  ## @param livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  timeoutSeconds: 5
+  ## @param livenessProbe.failureThreshold Failure threshold for livenessProbe
+  failureThreshold: 6
+  ## @param livenessProbe.successThreshold Success threshold for livenessProbe
+  successThreshold: 1
+
+## Readiness probe configuration
+readinessProbe:
+  ## @param readinessProbe.enabled Enable readinessProbe
+  enabled: true
+  ## @param readinessProbe.httpGet.path Path for readiness probe
+  httpGet:
+    path: /
+    port: http
+  ## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+  initialDelaySeconds: 10
+  ## @param readinessProbe.periodSeconds Period seconds for readinessProbe
+  periodSeconds: 5
+  ## @param readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+  timeoutSeconds: 3
+  ## @param readinessProbe.failureThreshold Failure threshold for readinessProbe
+  failureThreshold: 3
+  ## @param readinessProbe.successThreshold Success threshold for readinessProbe
+  successThreshold: 1
+
+## Pod annotations
+## @param podAnnotations Annotations for LocalRecall pods
+podAnnotations: {}
+
+## Pod labels
+## @param podLabels Extra labels for LocalRecall pods
+podLabels: {}
+
+## Pod Security Context
+## @param podSecurityContext.fsGroup Group ID for the pod
+podSecurityContext:
+  fsGroup: 1000
+
+## Container Security Context
+## @param securityContext Security context for the container
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+
+## Node selector
+## @param nodeSelector Node labels for pod assignment
+nodeSelector: {}
+
+## Tolerations
+## @param tolerations Tolerations for pod assignment
+tolerations: []
+
+## Affinity
+## @param affinity Affinity for pod assignment
+affinity: {}
+
+## Additional environment variables
+## @param extraEnvVars Array of extra environment variables
+extraEnvVars: []
+# - name: FOO
+#   value: "bar"
+
+## Additional environment variables from ConfigMaps or Secrets
+## @param extraEnvVarsConfigMap Name of existing ConfigMap containing extra env vars
+extraEnvVarsConfigMap: ""
+## @param extraEnvVarsSecret Name of existing Secret containing extra env vars
+extraEnvVarsSecret: ""
+
+## Extra volumes
+## @param extraVolumes Array of extra volumes
+extraVolumes: []
+
+## Extra volume mounts
+## @param extraVolumeMounts Array of extra volume mounts
+extraVolumeMounts: []

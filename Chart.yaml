@@ -1,0 +1,18 @@
+apiVersion: v2
+name: localrecall
+description: A lightweight RESTful API for managing knowledge bases in vector databases
+type: application
+version: 0.1.0
+appVersion: "v0.5.4"
+keywords:
+  - rag
+  - vector-database
+  - knowledge-base
+  - ai
+  - embeddings
+home: https://github.com/futuretea/localrecall-charts
+sources:
+  - https://github.com/mudler/LocalRecall
+maintainers:
+  - name: futuretea
+    url: https://github.com/futuretea
